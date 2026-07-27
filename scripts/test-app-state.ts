@@ -12,7 +12,7 @@ function check(label: string, cond: boolean) {
 }
 
 function countBy(state: State) {
-  const counts: Record<string, number> = { blank: 0, solved: 0, "given-up": 0, inactive: 0 };
+  const counts: Record<string, number> = { blank: 0, solved: 0, "given-up": 0, inactive: 0, excluded: 0 };
   for (const s of Object.values(state.status)) counts[s]++;
   return counts;
 }
@@ -38,7 +38,7 @@ const wrongCodes = Object.entries(state.status)
   .map(([code]) => code);
 check("wrongCodes count matches given-up count", wrongCodes.length === MUNICIPALITIES.length - 10);
 
-let retryState = reducer(state, { type: "startSession", targetCodes: wrongCodes });
+let retryState = reducer(state, { type: "startSession", targetCodes: wrongCodes, outOfScopeStatus: "inactive" });
 const retryCounts = countBy(retryState);
 check("retry session: blank count == wrongCodes count", retryCounts.blank === wrongCodes.length);
 check("retry session: inactive count == originally-solved count", retryCounts.inactive === 10);
@@ -53,14 +53,18 @@ check(
 );
 
 // 4. Recursive retry: give up partway through a retry session, then retry the new (smaller) wrong set.
-let retry2 = reducer(createSessionState(wrongCodes), { type: "solve", codes: wrongCodes.slice(0, 5) });
+let retry2 = reducer(createSessionState(wrongCodes, "inactive"), { type: "solve", codes: wrongCodes.slice(0, 5) });
 retry2 = reducer(retry2, { type: "giveUp" });
 const retry2WrongCodes = Object.entries(retry2.status)
   .filter(([, s]) => s === "given-up")
   .map(([code]) => code);
 check("recursive retry: second-round wrong set is smaller", retry2WrongCodes.length === wrongCodes.length - 5);
 
-const retry3 = reducer(retry2, { type: "startSession", targetCodes: retry2WrongCodes });
+const retry3 = reducer(retry2, {
+  type: "startSession",
+  targetCodes: retry2WrongCodes,
+  outOfScopeStatus: "inactive",
+});
 const retry3Counts = countBy(retry3);
 check("recursive retry: third session scoped to only the still-wrong codes", retry3Counts.blank === retry2WrongCodes.length);
 check(
@@ -77,6 +81,36 @@ check("reset to full: no inactive entries", countBy(backToFull).inactive === 0);
 const finishedFull = reducer(createSessionState(null), { type: "giveUp" });
 const afterNoOpSolve = reducer(finishedFull, { type: "solve", codes: [MUNICIPALITIES[0].cityCode] });
 check("solving after finish is a no-op", afterNoOpSolve === finishedFull);
+
+// 7. Prefecture mode: default outOfScopeStatus is "excluded", not "inactive".
+const hokkaidoCodes = MUNICIPALITIES.filter((m) => m.prefOrder === 1).map((m) => m.cityCode);
+let prefState = createSessionState(hokkaidoCodes);
+const prefCounts = countBy(prefState);
+check("prefecture session: blank count == prefecture size", prefCounts.blank === hokkaidoCodes.length);
+check(
+  "prefecture session: everything else is excluded, not inactive",
+  prefCounts.excluded === MUNICIPALITIES.length - hokkaidoCodes.length && prefCounts.inactive === 0,
+);
+
+// Solving the whole prefecture should auto-finish (excluded doesn't block completion either).
+prefState = reducer(prefState, { type: "solve", codes: hokkaidoCodes });
+check("prefecture session auto-finishes once the whole prefecture is solved", prefState.finishedAt !== null);
+
+// Give up partway through a prefecture session, then retry-wrong should stay
+// scoped to that prefecture's mistakes (not the whole country).
+let prefGiveUp = reducer(createSessionState(hokkaidoCodes), {
+  type: "solve",
+  codes: hokkaidoCodes.slice(0, 3),
+});
+prefGiveUp = reducer(prefGiveUp, { type: "giveUp" });
+const prefWrongCodes = Object.entries(prefGiveUp.status)
+  .filter(([, s]) => s === "given-up")
+  .map(([code]) => code);
+check(
+  "prefecture give-up: wrong codes are a subset of the prefecture, not the whole country",
+  prefWrongCodes.length === hokkaidoCodes.length - 3 &&
+    prefWrongCodes.every((c) => hokkaidoCodes.includes(c)),
+);
 
 console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

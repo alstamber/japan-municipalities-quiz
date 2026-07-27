@@ -64,6 +64,17 @@
   opacity: 0.5;
 }
 
+.pref-select {
+  font-size: 14px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  max-width: 420px;
+  width: 100%;
+}
+
 .give-up-button {
   font-size: 15px;
   padding: 8px 14px;
@@ -165,6 +176,11 @@
   fill: var(--prev);
 }
 
+.map-shape-excluded {
+  fill: var(--border);
+  opacity: 0.5;
+}
+
 .map-pref-border {
   fill: none;
   stroke: var(--map-stroke);
@@ -200,6 +216,11 @@
 
 .map-marker-inactive {
   fill: var(--prev);
+}
+
+.map-marker-excluded {
+  fill: var(--border);
+  opacity: 0.4;
 }
 
 .municipality-table {

@@ -1,1 +1,1 @@
-export type EntryStatus = "blank" | "solved" | "given-up" | "inactive";
+export type EntryStatus = "blank" | "solved" | "given-up" | "inactive" | "excluded";

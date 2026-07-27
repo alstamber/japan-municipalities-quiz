@@ -10,16 +10,22 @@ export interface State {
 export type Action =
   | { type: "solve"; codes: string[] }
   | { type: "giveUp" }
-  | { type: "startSession"; targetCodes: string[] | null };
+  | { type: "startSession"; targetCodes: string[] | null; outOfScopeStatus?: "inactive" | "excluded" };
 
 /** targetCodes === null means the full 1747-municipality session; otherwise
- * only those codes start "blank" and everything else is "inactive" (used
- * for the "retry only what I got wrong" mode). */
-export function createSessionState(targetCodes: string[] | null): State {
+ * only those codes start "blank" and everything else gets outOfScopeStatus:
+ * "inactive" (already known-correct — used for "retry only what I got
+ * wrong", which shows those inline in the table) or "excluded" (simply not
+ * part of this session, correctness unknown — used for per-prefecture mode,
+ * which hides those from the table entirely). */
+export function createSessionState(
+  targetCodes: string[] | null,
+  outOfScopeStatus: "inactive" | "excluded" = "excluded",
+): State {
   const targetSet = targetCodes ? new Set(targetCodes) : null;
   const status: Record<string, EntryStatus> = {};
   for (const m of MUNICIPALITIES) {
-    status[m.cityCode] = !targetSet || targetSet.has(m.cityCode) ? "blank" : "inactive";
+    status[m.cityCode] = !targetSet || targetSet.has(m.cityCode) ? "blank" : outOfScopeStatus;
   }
   return { status, startedAt: Date.now(), finishedAt: null };
 }
@@ -37,7 +43,9 @@ export function reducer(state: State, action: Action): State {
       }
       if (!changed) return state;
 
-      const allSolved = Object.values(status).every((s) => s === "solved" || s === "inactive");
+      const allSolved = Object.values(status).every(
+        (s) => s === "solved" || s === "inactive" || s === "excluded",
+      );
       const finishedAt = allSolved ? Date.now() : state.finishedAt;
       return { ...state, status, finishedAt };
     }
@@ -50,6 +58,6 @@ export function reducer(state: State, action: Action): State {
       return { ...state, status, finishedAt: Date.now() };
     }
     case "startSession":
-      return createSessionState(action.targetCodes);
+      return createSessionState(action.targetCodes, action.outOfScopeStatus);
   }
 }
