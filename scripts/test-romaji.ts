@@ -77,23 +77,27 @@ check("bie (should NOT match)", namesFor("bie"), []);
 check("shizuoka == sizuoka", normalize("shizuoka"), normalize("sizuoka"));
 check("tsu == tu (both directions map to same canonical)", normalize("matsudo"), normalize("matudo"));
 
-// 7. ん handling: internal ん keeps run-collapsing leniency (nan'you vs
-// nannyou ambiguity), but a word-final ん now strictly requires "nn".
+// 7. ん handling: every non-final real ん optionally doubles to "nn"
+// (IME-style typing habit, not just the classic んや/んゆ/んよ Hepburn
+// ambiguity), and a word-final ん strictly requires "nn".
 check("nanyoushi", namesFor("nanyoushi"), ["南陽市"]);
 check("nannyoushi", namesFor("nannyoushi"), ["南陽市"]);
 // Regression: "sanno" must NOT match 佐野市 (さのし, no ん at all — the "nn"
-// in "sanno" is just a coincidental "n"+"no" concatenation, not a real ん
-// followed by や/ゆ/よ, so it must never fold down to "sano").
+// in "sanno" is just a coincidental "n"+"no" concatenation, not a real ん,
+// so it must never fold down to "sano").
 check("sano -> 佐野市", namesFor("sano"), ["佐野市"]);
 check("sanno (should NOT match 佐野市)", namesFor("sanno"), []);
+// Regression: 陸前高田市's りくぜんたかた has ん before た (not や/ゆ/よ), which
+// must still accept the doubled "rikuzenntakata" spelling.
+check("rikuzentakata", namesFor("rikuzentakata"), ["陸前高田市"]);
+check("rikuzenntakata (doubled ん before a plain consonant)", namesFor("rikuzenntakata"), ["陸前高田市"]);
 // 東員町's suffix-stripped base とういん ends in ん (word-final).
 check("touinn (word-final ん, doubled)", namesFor("touinn"), ["東員町"]);
 check("touin (single trailing n, should NOT match)", namesFor("touin"), []);
-// With the suffix included, ん is no longer word-final (ちょう follows). The
-// nn-before-y leniency doesn't apply here either (followed by "c", not "y"),
-// so only the literal single-n spelling matches — same reasoning as sanno.
+// With the suffix included, ん is no longer word-final (ちょう follows), so
+// it's just a regular non-final ん — both single and doubled n work.
 check("touinchou (with suffix, ん not final)", namesFor("touinchou"), ["東員町"]);
-check("touinnchou (doubled n before non-y, should NOT match)", namesFor("touinnchou"), []);
+check("touinnchou (with suffix, doubled non-final ん)", namesFor("touinnchou"), ["東員町"]);
 
 // 8. Suffix variety: ward, town (both machi/cho readings), village (both mura/son)
 // NOTE: 千代田区(Tokyo) and 千代田町(Gunma) share the base reading "chiyoda" once

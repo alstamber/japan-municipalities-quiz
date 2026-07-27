@@ -48,12 +48,14 @@ function moraAt(kana: string, i: number): { romaji: string; len: number } | null
  * 東員町's stripped base とういん must be typed "touinn", not "touin". No
  * long-vowel folding happens here — that's normalize()'s job.
  *
- * Also returns the output-string index right after each ん that is
- * immediately followed by や/ゆ/よ — the one case where Hepburn allows an
- * alternate "nn" spelling (んや/んゆ/んよ can otherwise be misread as the
- * にゃ/にゅ/にょ digraph). These positions come directly from the kana, not
- * from pattern-matching the resulting romaji, so they can only ever mark a
- * real ん — see kanaToBaseVariants(). */
+ * Also returns the output-string index right after every non-final ん —
+ * IME-style romaji input commonly types ん as "nn" everywhere (not just the
+ * classic んや/んゆ/んよ vs にゃ/にゅ/にょ Hepburn ambiguity, e.g. 陸前高田市's
+ * りくぜんたかた needs "rikuzenntakata" to work too), so every real ん gets an
+ * optional doubled spelling. These positions come directly from the kana,
+ * not from pattern-matching the resulting romaji, so they can only ever mark
+ * a real ん (that's what fixed "sanno" wrongly matching 佐野市's さの, which
+ * has no ん at all) — see kanaToBaseVariants(). */
 function kanaToBaseWithDoubleableNPositions(kana: string): { base: string; doubleableAt: number[] } {
   let out = "";
   const doubleableAt: number[] = [];
@@ -63,7 +65,7 @@ function kanaToBaseWithDoubleableNPositions(kana: string): { base: string; doubl
     if (ch === "ん") {
       const isFinal = i === kana.length - 1;
       out += isFinal ? "nn" : "n";
-      if (!isFinal && (kana[i + 1] === "や" || kana[i + 1] === "ゆ" || kana[i + 1] === "よ")) {
+      if (!isFinal) {
         doubleableAt.push(out.length);
       }
       i++;
@@ -92,9 +94,9 @@ export function kanaToBase(kana: string): string {
   return kanaToBaseWithDoubleableNPositions(kana).base;
 }
 
-/** kanaToBase(kana), plus one extra spelling for every real ん immediately
- * followed by や/ゆ/よ, with that ん doubled to "nn". Multiple such ん in one
- * reading combine (every real one is independently optional-doubled). */
+/** kanaToBase(kana), plus one extra spelling for every non-final real ん,
+ * with that ん doubled to "nn". Multiple such ん in one reading combine
+ * (every real one is independently optional-doubled). */
 export function kanaToBaseVariants(kana: string): string[] {
   const { base, doubleableAt } = kanaToBaseWithDoubleableNPositions(kana);
   if (doubleableAt.length === 0) return [base];
@@ -131,8 +133,8 @@ const NORMALIZE_RULES: [RegExp, string][] = [
   // "ou"->"o"), but that was explicitly reverted per product decision.
 ];
 
-// んの表記ゆれ (n vs nn before や/ゆ/よ, and required word-final doubling) is
-// handled entirely by kanaToBaseVariants() generating the exact accepted
+// んの表記ゆれ (n vs nn for every non-final ん, and required word-final
+// doubling) is handled entirely by kanaToBaseVariants() generating the exact accepted
 // spellings from the kana itself — not by pattern-matching the romaji here.
 // An earlier version tried to fold this in normalize() with a generic
 // `n{2,}` regex, which incorrectly treated any coincidental double-n as the
