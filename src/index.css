@@ -9,6 +9,9 @@
   --accent-border: rgba(170, 59, 255, 0.5);
   --map-bg: #dbe6ee;
   --map-stroke: #8b8a94;
+  --prev: #1d6fd6;
+  --prev-bg: rgba(29, 111, 214, 0.14);
+  --prev-border: rgba(29, 111, 214, 0.55);
 
   --sans: system-ui, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -35,6 +38,9 @@
     --accent-border: rgba(192, 132, 252, 0.5);
     --map-bg: #0d1420;
     --map-stroke: #6b6f7d;
+    --prev: #5b9df0;
+    --prev-bg: rgba(91, 157, 240, 0.2);
+    --prev-border: rgba(91, 157, 240, 0.55);
   }
 }
 

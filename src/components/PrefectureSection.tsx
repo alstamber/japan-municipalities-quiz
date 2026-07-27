@@ -8,14 +8,17 @@ interface Props {
 }
 
 export function PrefectureSection({ prefName, items, status }: Props) {
-  const solvedInPref = items.filter((m) => status[m.cityCode] === "solved").length;
+  const filledInPref = items.filter((m) => {
+    const st = status[m.cityCode];
+    return st === "solved" || st === "inactive";
+  }).length;
 
   return (
     <section className="pref-section">
       <h2 className="pref-heading">
         <span>{prefName}</span>
         <span className="pref-count">
-          {solvedInPref} / {items.length}
+          {filledInPref} / {items.length}
         </span>
       </h2>
       <div className="cell-grid">

@@ -18,6 +18,9 @@ interface Props {
   solvedCount: number;
   total: number;
   finished: boolean;
+  wrongCount: number;
+  onRetryWrong: () => void;
+  onStartFull: () => void;
 }
 
 const WIDTH = 480;
@@ -34,7 +37,16 @@ interface MarkerDatum {
   y: number;
 }
 
-export function JapanMap({ status, elapsedMs, solvedCount, total, finished }: Props) {
+export function JapanMap({
+  status,
+  elapsedMs,
+  solvedCount,
+  total,
+  finished,
+  wrongCount,
+  onRetryWrong,
+  onStartFull,
+}: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const zoomGroupRef = useRef<SVGGElement | null>(null);
 
@@ -112,7 +124,9 @@ export function JapanMap({ status, elapsedMs, solvedCount, total, finished }: Pr
             const st = status[s.cityCode] ?? "blank";
             return (
               <path key={`${s.cityCode}-${i}`} d={s.d} className={`map-shape map-shape-${st}`}>
-                {st === "solved" && <title>{formatMunicipalityName(nameByCode.get(s.cityCode))}</title>}
+                {(st === "solved" || st === "inactive") && (
+                  <title>{formatMunicipalityName(nameByCode.get(s.cityCode))}</title>
+                )}
               </path>
             );
           })}
@@ -123,14 +137,25 @@ export function JapanMap({ status, elapsedMs, solvedCount, total, finished }: Pr
             const st = status[m.cityCode] ?? "blank";
             return (
               <circle key={m.cityCode} cx={m.x} cy={m.y} r={2.5} className={`map-marker map-marker-${st}`}>
-                {st === "solved" && <title>{formatMunicipalityName(nameByCode.get(m.cityCode))}</title>}
+                {(st === "solved" || st === "inactive") && (
+                  <title>{formatMunicipalityName(nameByCode.get(m.cityCode))}</title>
+                )}
               </circle>
             );
           })}
           <path d={prefBorderPath} className="map-pref-border" />
         </g>
       </svg>
-      {finished && <ResultSummary elapsedMs={elapsedMs} solvedCount={solvedCount} total={total} />}
+      {finished && (
+        <ResultSummary
+          elapsedMs={elapsedMs}
+          solvedCount={solvedCount}
+          total={total}
+          wrongCount={wrongCount}
+          onRetryWrong={onRetryWrong}
+          onStartFull={onStartFull}
+        />
+      )}
       <p className="japan-map-credit">
         出典：国土数値情報（行政区域データ）（国土交通省）を加工して作成 / 湖沼形状の一部に © OpenStreetMap contributors のデータを使用
       </p>

@@ -23,6 +23,17 @@
   color: var(--text-h);
 }
 
+.mode-badge {
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  vertical-align: middle;
+}
+
 .stats-bar {
   display: flex;
   gap: 16px;
@@ -81,6 +92,24 @@
   margin: 0 0 4px;
 }
 
+.result-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.result-action-button {
+  font-size: 14px;
+  padding: 6px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .main-content {
   flex: 1;
   display: flex;
@@ -132,6 +161,10 @@
   fill: rgba(220, 60, 60, 0.55);
 }
 
+.map-shape-inactive {
+  fill: var(--prev);
+}
+
 .map-pref-border {
   fill: none;
   stroke: var(--map-stroke);
@@ -163,6 +196,10 @@
 
 .map-marker-given-up {
   fill: rgba(220, 60, 60, 0.85);
+}
+
+.map-marker-inactive {
+  fill: var(--prev);
 }
 
 .municipality-table {
@@ -229,6 +266,11 @@
 .cell-given-up {
   background: rgba(220, 60, 60, 0.12);
   border-color: rgba(220, 60, 60, 0.4);
+}
+
+.cell-inactive {
+  background: var(--prev-bg);
+  border-color: var(--prev-border);
 }
 
 .cell-district {
