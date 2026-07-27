@@ -3,6 +3,7 @@ import { MUNICIPALITIES } from "./data/municipalities.generated";
 import { buildCanonicalMap } from "./lib/romaji";
 import { useElapsedTimer } from "./lib/useElapsedTimer";
 import { GuessInput } from "./components/GuessInput";
+import { JapanMap } from "./components/JapanMap";
 import { MunicipalityTable } from "./components/MunicipalityTable";
 import { StatsBar } from "./components/StatsBar";
 import { GiveUpButton } from "./components/GiveUpButton";
@@ -82,7 +83,10 @@ function App() {
         </div>
         {finished && <ResultSummary elapsedMs={elapsedMs} solvedCount={solvedCount} total={TOTAL} />}
       </header>
-      <MunicipalityTable municipalities={MUNICIPALITIES} status={state.status} />
+      <div className="main-content">
+        <JapanMap status={state.status} />
+        <MunicipalityTable municipalities={MUNICIPALITIES} status={state.status} />
+      </div>
     </div>
   );
 }

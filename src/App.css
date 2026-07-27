@@ -1,7 +1,7 @@
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
+  height: 100svh;
 }
 
 .app-header {
@@ -79,8 +79,96 @@
   margin: 0 0 4px;
 }
 
+.main-content {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.japan-map {
+  flex: 0 0 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.japan-map-svg {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--map-bg);
+  touch-action: none;
+}
+
+.japan-map-credit {
+  font-size: 11px;
+  color: var(--text);
+  margin: 6px 0 0;
+  text-align: center;
+}
+
+.map-shape {
+  stroke: var(--map-stroke);
+  stroke-width: 0.15;
+  transition: fill 0.15s ease;
+}
+
+.map-shape-blank {
+  fill: var(--code-bg);
+}
+
+.map-shape-solved {
+  fill: var(--accent);
+}
+
+.map-shape-given-up {
+  fill: rgba(220, 60, 60, 0.55);
+}
+
+.map-pref-border {
+  fill: none;
+  stroke: var(--map-stroke);
+  stroke-width: 0.3;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.map-lake {
+  fill: var(--map-bg);
+  stroke: var(--map-stroke);
+  stroke-width: 0.15;
+  pointer-events: none;
+}
+
+.map-marker {
+  stroke: var(--map-stroke);
+  stroke-width: 0.6;
+}
+
+.map-marker-blank {
+  fill: var(--text);
+  opacity: 0.5;
+}
+
+.map-marker-solved {
+  fill: var(--accent);
+}
+
+.map-marker-given-up {
+  fill: rgba(220, 60, 60, 0.85);
+}
+
 .municipality-table {
-  padding: 12px 20px 40px;
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 0 16px 40px 0;
+  scrollbar-gutter: stable;
 }
 
 .pref-section {
@@ -89,7 +177,7 @@
 
 .pref-heading {
   position: sticky;
-  top: 96px;
+  top: 0;
   z-index: 5;
   display: flex;
   justify-content: space-between;
@@ -145,4 +233,20 @@
   font-size: 11px;
   color: var(--text);
   margin-left: 2px;
+}
+
+@media (max-width: 860px) {
+  .main-content {
+    flex-direction: column;
+  }
+
+  .japan-map {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: 42svh;
+  }
+
+  .japan-map-svg {
+    max-height: calc(42svh - 24px);
+  }
 }
