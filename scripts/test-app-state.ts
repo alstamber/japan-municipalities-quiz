@@ -112,5 +112,36 @@ check(
     prefWrongCodes.every((c) => hokkaidoCodes.includes(c)),
 );
 
+// Regression: retrying-wrong from within a prefecture session must NOT
+// balloon back into a full-country session — every other prefecture's
+// municipalities must stay "excluded" (hidden from the table), not flip to
+// "inactive" (shown as known-elsewhere), even though they're also outside
+// the new (narrower) target set.
+const prefRetryState = reducer(prefGiveUp, {
+  type: "startSession",
+  targetCodes: prefWrongCodes,
+  outOfScopeStatus: "inactive",
+});
+const prefRetryCounts = countBy(prefRetryState);
+const hokkaidoSet = new Set(hokkaidoCodes);
+const nonHokkaidoCodes = MUNICIPALITIES.filter((m) => !hokkaidoSet.has(m.cityCode)).map((m) => m.cityCode);
+check(
+  "prefecture retry: still-blank count == prefecture's wrong codes",
+  prefRetryCounts.blank === prefWrongCodes.length,
+);
+check(
+  "prefecture retry: the 3 solved-before-giveup Hokkaido codes become inactive (known)",
+  prefRetryCounts.inactive === 3,
+);
+check(
+  "prefecture retry: every non-Hokkaido municipality stays excluded, not inactive",
+  nonHokkaidoCodes.every((c) => prefRetryState.status[c] === "excluded"),
+);
+check(
+  "prefecture retry: total in-scope count (non-inactive, non-excluded) == wrong codes only",
+  Object.values(prefRetryState.status).filter((s) => s !== "inactive" && s !== "excluded").length ===
+    prefWrongCodes.length,
+);
+
 console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

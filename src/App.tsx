@@ -84,7 +84,10 @@ function App() {
       <header className="app-header">
         <h1>
           全市区町村ローマ字入力クイズ
-          {isRetryMode && <span className="mode-badge">復習モード</span>}
+          {isRetryMode && isPrefectureMode && selectedPref && (
+            <span className="mode-badge">{selectedPref.prefName}・復習モード</span>
+          )}
+          {isRetryMode && !isPrefectureMode && <span className="mode-badge">復習モード</span>}
           {!isRetryMode && isPrefectureMode && selectedPref && (
             <span className="mode-badge">{selectedPref.prefName}のみ</span>
           )}

@@ -17,15 +17,27 @@ export type Action =
  * "inactive" (already known-correct — used for "retry only what I got
  * wrong", which shows those inline in the table) or "excluded" (simply not
  * part of this session, correctness unknown — used for per-prefecture mode,
- * which hides those from the table entirely). */
+ * which hides those from the table entirely).
+ *
+ * previousStatus (the status record from before this session started) lets
+ * an already-"excluded" municipality stay "excluded" even when it falls
+ * outside the new target set with outOfScopeStatus "inactive" — otherwise,
+ * retrying-wrong from within a prefecture-scoped session would overwrite
+ * every OTHER prefecture's "excluded" entries with "inactive" and the
+ * session would silently balloon back into a full-country one. */
 export function createSessionState(
   targetCodes: string[] | null,
   outOfScopeStatus: "inactive" | "excluded" = "excluded",
+  previousStatus?: Record<string, EntryStatus>,
 ): State {
   const targetSet = targetCodes ? new Set(targetCodes) : null;
   const status: Record<string, EntryStatus> = {};
   for (const m of MUNICIPALITIES) {
-    status[m.cityCode] = !targetSet || targetSet.has(m.cityCode) ? "blank" : outOfScopeStatus;
+    if (!targetSet || targetSet.has(m.cityCode)) {
+      status[m.cityCode] = "blank";
+    } else {
+      status[m.cityCode] = previousStatus?.[m.cityCode] === "excluded" ? "excluded" : outOfScopeStatus;
+    }
   }
   return { status, startedAt: Date.now(), finishedAt: null };
 }
@@ -58,6 +70,6 @@ export function reducer(state: State, action: Action): State {
       return { ...state, status, finishedAt: Date.now() };
     }
     case "startSession":
-      return createSessionState(action.targetCodes, action.outOfScopeStatus);
+      return createSessionState(action.targetCodes, action.outOfScopeStatus, state.status);
   }
 }
