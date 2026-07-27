@@ -1,0 +1,148 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-header h1 {
+  font-size: 22px;
+  margin: 0;
+  color: var(--text-h);
+}
+
+.stats-bar {
+  display: flex;
+  gap: 16px;
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--text-h);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.guess-input {
+  flex: 1;
+  font-size: 18px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.guess-input:disabled {
+  opacity: 0.5;
+}
+
+.give-up-button {
+  font-size: 15px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.give-up-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.result-summary {
+  text-align: center;
+  color: var(--text-h);
+}
+
+.result-headline {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.municipality-table {
+  padding: 12px 20px 40px;
+}
+
+.pref-section {
+  margin-bottom: 18px;
+}
+
+.pref-heading {
+  position: sticky;
+  top: 96px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: var(--bg);
+  font-size: 16px;
+  margin: 0 0 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+}
+
+.pref-count {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.cell-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+}
+
+.cell {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  padding: 4px 6px;
+  text-align: center;
+  color: var(--text-h);
+}
+
+.cell-blank {
+  background: var(--code-bg);
+}
+
+.cell-solved {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+.cell-given-up {
+  background: rgba(220, 60, 60, 0.12);
+  border-color: rgba(220, 60, 60, 0.4);
+}
+
+.cell-district {
+  font-size: 11px;
+  color: var(--text);
+  margin-left: 2px;
+}
