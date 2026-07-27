@@ -43,15 +43,29 @@ function moraAt(kana: string, i: number): { romaji: string; len: number } | null
 }
 
 /** Mora-by-mora literal romanization of a hiragana reading. っ doubles the
- * following consonant; ん becomes plain "n". No long-vowel folding happens
- * here — that's normalize()'s job. */
-export function kanaToBase(kana: string): string {
+ * following consonant; ん becomes plain "n", except a word-final ん (nothing
+ * follows it) becomes "nn" — required doubling, not just leniency, so e.g.
+ * 東員町's stripped base とういん must be typed "touinn", not "touin". No
+ * long-vowel folding happens here — that's normalize()'s job.
+ *
+ * Also returns the output-string index right after each ん that is
+ * immediately followed by や/ゆ/よ — the one case where Hepburn allows an
+ * alternate "nn" spelling (んや/んゆ/んよ can otherwise be misread as the
+ * にゃ/にゅ/にょ digraph). These positions come directly from the kana, not
+ * from pattern-matching the resulting romaji, so they can only ever mark a
+ * real ん — see kanaToBaseVariants(). */
+function kanaToBaseWithDoubleableNPositions(kana: string): { base: string; doubleableAt: number[] } {
   let out = "";
+  const doubleableAt: number[] = [];
   let i = 0;
   while (i < kana.length) {
     const ch = kana[i];
     if (ch === "ん") {
-      out += "n";
+      const isFinal = i === kana.length - 1;
+      out += isFinal ? "nn" : "n";
+      if (!isFinal && (kana[i + 1] === "や" || kana[i + 1] === "ゆ" || kana[i + 1] === "よ")) {
+        doubleableAt.push(out.length);
+      }
       i++;
       continue;
     }
@@ -71,7 +85,34 @@ export function kanaToBase(kana: string): string {
     out += ch;
     i++;
   }
-  return out;
+  return { base: out, doubleableAt };
+}
+
+export function kanaToBase(kana: string): string {
+  return kanaToBaseWithDoubleableNPositions(kana).base;
+}
+
+/** kanaToBase(kana), plus one extra spelling for every real ん immediately
+ * followed by や/ゆ/よ, with that ん doubled to "nn". Multiple such ん in one
+ * reading combine (every real one is independently optional-doubled). */
+export function kanaToBaseVariants(kana: string): string[] {
+  const { base, doubleableAt } = kanaToBaseWithDoubleableNPositions(kana);
+  if (doubleableAt.length === 0) return [base];
+
+  const variants = new Set<string>();
+  const combinations = 1 << doubleableAt.length;
+  for (let mask = 0; mask < combinations; mask++) {
+    let s = base;
+    // Insert right-to-left so earlier positions stay valid as we go.
+    for (let bit = doubleableAt.length - 1; bit >= 0; bit--) {
+      if (mask & (1 << bit)) {
+        const pos = doubleableAt[bit];
+        s = s.slice(0, pos) + "n" + s.slice(pos);
+      }
+    }
+    variants.add(s);
+  }
+  return [...variants];
 }
 
 const NORMALIZE_RULES: [RegExp, string][] = [
@@ -88,10 +129,16 @@ const NORMALIZE_RULES: [RegExp, string][] = [
   // be typed literally, mora-by-mora (e.g. 江東区=こうとうく requires "koutou",
   // not "kotou" or "koto"). This was previously more lenient for お列 (folding
   // "ou"->"o"), but that was explicitly reverted per product decision.
-  // んの連続表記ゆれ: collapse repeated n (e.g. "nannyou" == "nanyou").
-  // Verified zero collisions across the full 1747-entry dataset.
-  [/n{2,}/g, "n"],
 ];
+
+// んの表記ゆれ (n vs nn before や/ゆ/よ, and required word-final doubling) is
+// handled entirely by kanaToBaseVariants() generating the exact accepted
+// spellings from the kana itself — not by pattern-matching the romaji here.
+// An earlier version tried to fold this in normalize() with a generic
+// `n{2,}` regex, which incorrectly treated any coincidental double-n as the
+// same ambiguity (e.g. "sanno" wrongly matched 佐野市's "sano", which has no
+// ん at all). Deriving the leniency from real ん positions in the kana avoids
+// that entire class of bug by construction.
 
 /** Reduces romaji (from either the reference kana or live user input) to one
  * canonical comparable form. Applying the same function to both sides is
@@ -141,13 +188,17 @@ export function buildCanonicalMap(municipalities: Municipality[]): Map<string, s
   };
 
   for (const m of municipalities) {
-    add(normalize(kanaToBase(m.cityKana)), m.cityCode);
+    for (const variant of kanaToBaseVariants(m.cityKana)) {
+      add(normalize(variant), m.cityCode);
+    }
 
     const stripped = stripSuffixKana(m.cityName, m.cityKana);
     if (stripped === null) {
       console.warn(`could not identify suffix reading for ${m.cityName} (${m.cityKana})`);
     } else if (stripped.length > 0) {
-      add(normalize(kanaToBase(stripped)), m.cityCode);
+      for (const variant of kanaToBaseVariants(stripped)) {
+        add(normalize(variant), m.cityCode);
+      }
     }
   }
 

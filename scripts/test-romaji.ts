@@ -77,9 +77,23 @@ check("bie (should NOT match)", namesFor("bie"), []);
 check("shizuoka == sizuoka", normalize("shizuoka"), normalize("sizuoka"));
 check("tsu == tu (both directions map to same canonical)", normalize("matsudo"), normalize("matudo"));
 
-// 7. ん run collapsing
+// 7. ん handling: internal ん keeps run-collapsing leniency (nan'you vs
+// nannyou ambiguity), but a word-final ん now strictly requires "nn".
 check("nanyoushi", namesFor("nanyoushi"), ["南陽市"]);
 check("nannyoushi", namesFor("nannyoushi"), ["南陽市"]);
+// Regression: "sanno" must NOT match 佐野市 (さのし, no ん at all — the "nn"
+// in "sanno" is just a coincidental "n"+"no" concatenation, not a real ん
+// followed by や/ゆ/よ, so it must never fold down to "sano").
+check("sano -> 佐野市", namesFor("sano"), ["佐野市"]);
+check("sanno (should NOT match 佐野市)", namesFor("sanno"), []);
+// 東員町's suffix-stripped base とういん ends in ん (word-final).
+check("touinn (word-final ん, doubled)", namesFor("touinn"), ["東員町"]);
+check("touin (single trailing n, should NOT match)", namesFor("touin"), []);
+// With the suffix included, ん is no longer word-final (ちょう follows). The
+// nn-before-y leniency doesn't apply here either (followed by "c", not "y"),
+// so only the literal single-n spelling matches — same reasoning as sanno.
+check("touinchou (with suffix, ん not final)", namesFor("touinchou"), ["東員町"]);
+check("touinnchou (doubled n before non-y, should NOT match)", namesFor("touinnchou"), []);
 
 // 8. Suffix variety: ward, town (both machi/cho readings), village (both mura/son)
 // NOTE: 千代田区(Tokyo) and 千代田町(Gunma) share the base reading "chiyoda" once
@@ -89,7 +103,10 @@ check("nannyoushi", namesFor("nannyoushi"), ["南陽市"]);
 check("chiyoda (no suffix) -> both 千代田区/町", namesFor("chiyoda").sort(), ["千代田区", "千代田町"].sort());
 check("chiyodaku (ward, with suffix)", namesFor("chiyodaku"), ["千代田区"]);
 check("higashi (village, son reading, no suffix)", namesFor("higashi"), ["東村"]);
-check("higashison (village, son reading, with suffix)", namesFor("higashison"), ["東村"]);
+// 東村's full reading ひがしそん ends in ん, so the with-suffix form requires
+// the word-final "nn" doubling — "higashison" (single n) must NOT match.
+check("higashisonn (village, son reading, with suffix, doubled n)", namesFor("higashisonn"), ["東村"]);
+check("higashison (single trailing n, should NOT match)", namesFor("higashison"), []);
 
 console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);
