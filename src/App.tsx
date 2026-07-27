@@ -10,11 +10,13 @@ import { GiveUpButton } from "./components/GiveUpButton";
 import "./App.css";
 
 const PREFECTURES = (() => {
-  const seen = new Map<number, string>();
+  const seen = new Map<number, { prefName: string; prefCode: string }>();
   for (const m of MUNICIPALITIES) {
-    if (!seen.has(m.prefOrder)) seen.set(m.prefOrder, m.prefName);
+    if (!seen.has(m.prefOrder)) seen.set(m.prefOrder, { prefName: m.prefName, prefCode: m.prefCode });
   }
-  return [...seen.entries()].sort((a, b) => a[0] - b[0]).map(([prefOrder, prefName]) => ({ prefOrder, prefName }));
+  return [...seen.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([prefOrder, { prefName, prefCode }]) => ({ prefOrder, prefName, prefCode }));
 })();
 
 function App() {
@@ -75,7 +77,7 @@ function App() {
     dispatch({ type: "startSession", targetCodes: codes, outOfScopeStatus: "excluded" });
   };
 
-  const selectedPrefName = PREFECTURES.find((p) => p.prefOrder === selectedPrefOrder)?.prefName;
+  const selectedPref = PREFECTURES.find((p) => p.prefOrder === selectedPrefOrder);
 
   return (
     <div className="app">
@@ -83,8 +85,8 @@ function App() {
         <h1>
           全市区町村ローマ字入力クイズ
           {isRetryMode && <span className="mode-badge">復習モード</span>}
-          {!isRetryMode && isPrefectureMode && selectedPrefName && (
-            <span className="mode-badge">{selectedPrefName}のみ</span>
+          {!isRetryMode && isPrefectureMode && selectedPref && (
+            <span className="mode-badge">{selectedPref.prefName}のみ</span>
           )}
         </h1>
         <div className="controls">
@@ -119,6 +121,7 @@ function App() {
           wrongCount={wrongCount}
           onRetryWrong={handleRetryWrong}
           onStartFull={handleStartFull}
+          focusPrefCode={selectedPref?.prefCode ?? null}
         />
         <MunicipalityTable municipalities={visibleMunicipalities} status={state.status} />
       </div>
