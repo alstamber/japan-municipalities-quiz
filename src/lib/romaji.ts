@@ -84,11 +84,10 @@ const NORMALIZE_RULES: [RegExp, string][] = [
   [/di/g, "ji"], [/du/g, "zu"], [/zi/g, "ji"],
   // Sokuon before ch: "maccha" and "matcha" style spellings converge.
   [/cch/g, "tch"],
-  // お列 long vowel: "ou" and "o" (u dropped) are both accepted. This is a
-  // ONE-WAY fold — "oo" is deliberately left untouched and will not match.
-  [/ou/g, "o"],
-  // え列 long vowel gets NO leniency at all (no "ei"->"e" or "ee" folding) —
-  // this asymmetry with お列 is intentional, per explicit product decision.
+  // No long-vowel leniency at all, for ANY vowel column. お列/え列/う列 etc. must
+  // be typed literally, mora-by-mora (e.g. 江東区=こうとうく requires "koutou",
+  // not "kotou" or "koto"). This was previously more lenient for お列 (folding
+  // "ou"->"o"), but that was explicitly reverted per product decision.
   // んの連続表記ゆれ: collapse repeated n (e.g. "nannyou" == "nanyou").
   // Verified zero collisions across the full 1747-entry dataset.
   [/n{2,}/g, "n"],

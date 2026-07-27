@@ -51,17 +51,25 @@ check("fuchushi (single u, should NOT match)", namesFor("fuchushi"), []);
 check("tomarimura -> both 泊村", namesFor("tomarimura").sort(), ["泊村", "泊村"].sort());
 check("tomari (no suffix) -> both 泊村", namesFor("tomari").sort(), ["泊村", "泊村"].sort());
 
-// 4. お列 long vowel: ou and o both accepted, oo rejected
+// 4. お列 long vowel: NO leniency at all (reverted — "o" and "oo" both rejected,
+// only the literal "ou" spelling is accepted, same strictness as え/う columns).
 check("toubetsu", namesFor("toubetsu"), ["当別町"]);
-check("tobetsu", namesFor("tobetsu"), ["当別町"]);
+check("tobetsu (should NOT match)", namesFor("tobetsu"), []);
 check("toobetsu (should NOT match)", namesFor("toobetsu"), []);
-check("toubetsucho", namesFor("toubetsucho"), ["当別町"]);
-check("tobetsucho", namesFor("tobetsucho"), ["当別町"]);
+// The 町 suffix reading itself is ちょう (cho+u), so under full strictness the
+// only accepted with-suffix spelling is "...chou", not "...cho".
+check("toubetsuchou", namesFor("toubetsuchou"), ["当別町"]);
+check("toubetsucho (should NOT match, missing final u)", namesFor("toubetsucho"), []);
+check("tobetsucho (should NOT match)", namesFor("tobetsucho"), []);
 check("toobetsucho (should NOT match)", namesFor("toobetsucho"), []);
+check("koutou -> 江東区", namesFor("koutou"), ["江東区"]);
+check("kotou (should NOT match)", namesFor("kotou"), []);
+check("koto (should NOT match)", namesFor("koto"), []);
 
 // 5. え列 long vowel: NO leniency at all
 check("biei", namesFor("biei"), ["美瑛町"]);
-check("bieicho", namesFor("bieicho"), ["美瑛町"]);
+check("bieichou", namesFor("bieichou"), ["美瑛町"]);
+check("bieicho (should NOT match, missing final u)", namesFor("bieicho"), []);
 check("biee (should NOT match)", namesFor("biee"), []);
 check("bie (should NOT match)", namesFor("bie"), []);
 
