@@ -1,5 +1,6 @@
 import type { Municipality } from "../data/municipalities.generated";
 import type { EntryStatus } from "../types";
+import { MunicipalityCell } from "./MunicipalityCell";
 
 interface Props {
   prefName: string;
@@ -22,19 +23,9 @@ export function PrefectureSection({ prefName, items, status }: Props) {
         </span>
       </h2>
       <div className="cell-grid">
-        {items.map((m) => {
-          const st = status[m.cityCode];
-          return (
-            <div key={m.cityCode} className={`cell cell-${st}`}>
-              {st !== "blank" && (
-                <>
-                  {m.cityName}
-                  {m.districtName && <span className="cell-district">（{m.districtName}）</span>}
-                </>
-              )}
-            </div>
-          );
-        })}
+        {items.map((m) => (
+          <MunicipalityCell key={m.cityCode} municipality={m} status={status[m.cityCode]} />
+        ))}
       </div>
     </section>
   );

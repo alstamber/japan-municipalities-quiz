@@ -11,6 +11,8 @@ import { MUNICIPALITIES } from "../data/municipalities.generated";
 import { formatMunicipalityName } from "../lib/format";
 import { StatsBar } from "./StatsBar";
 import { ResultSummary } from "./ResultSummary";
+import { MapShape } from "./MapShape";
+import { MapMarker } from "./MapMarker";
 import type { EntryStatus } from "../types";
 
 interface Props {
@@ -32,12 +34,14 @@ const SCALE_EXTENT: [number, number] = [1, 24];
 interface ShapeDatum {
   cityCode: string;
   d: string;
+  title: string;
 }
 
 interface MarkerDatum {
   cityCode: string;
   x: number;
   y: number;
+  title: string;
 }
 
 type Bounds = [[number, number], [number, number]];
@@ -89,11 +93,17 @@ export function JapanMap({
     const shapes: ShapeDatum[] = collection.features.map((f) => ({
       cityCode: f.properties.cityCode,
       d: path(f) ?? "",
+      title: formatMunicipalityName(nameByCode.get(f.properties.cityCode)),
     }));
 
     const markers: MarkerDatum[] = MAP_MARKER_FALLBACKS.map((m) => {
       const projected = projection([m.lng, m.lat]);
-      return { cityCode: m.cityCode, x: projected?.[0] ?? 0, y: projected?.[1] ?? 0 };
+      return {
+        cityCode: m.cityCode,
+        x: projected?.[0] ?? 0,
+        y: projected?.[1] ?? 0,
+        title: formatMunicipalityName(nameByCode.get(m.cityCode)),
+      };
     });
 
     // Lines where the two municipalities on either side belong to different
@@ -125,7 +135,7 @@ export function JapanMap({
     }
 
     return { shapes, markers, prefBorderPath, lakePaths, prefBounds };
-  }, []);
+  }, [nameByCode]);
 
   useEffect(() => {
     const svgEl = svgRef.current;
@@ -186,29 +196,15 @@ export function JapanMap({
         aria-label="日本地図（都道府県別の正解状況）"
       >
         <g ref={zoomGroupRef}>
-          {shapes.map((s, i) => {
-            const st = status[s.cityCode] ?? "blank";
-            return (
-              <path key={`${s.cityCode}-${i}`} d={s.d} className={`map-shape map-shape-${st}`}>
-                {(st === "solved" || st === "inactive") && (
-                  <title>{formatMunicipalityName(nameByCode.get(s.cityCode))}</title>
-                )}
-              </path>
-            );
-          })}
+          {shapes.map((s, i) => (
+            <MapShape key={`${s.cityCode}-${i}`} d={s.d} status={status[s.cityCode] ?? "blank"} title={s.title} />
+          ))}
           {lakePaths.map((d, i) => (
             <path key={i} d={d} className="map-lake" />
           ))}
-          {markers.map((m) => {
-            const st = status[m.cityCode] ?? "blank";
-            return (
-              <circle key={m.cityCode} cx={m.x} cy={m.y} r={2.5} className={`map-marker map-marker-${st}`}>
-                {(st === "solved" || st === "inactive") && (
-                  <title>{formatMunicipalityName(nameByCode.get(m.cityCode))}</title>
-                )}
-              </circle>
-            );
-          })}
+          {markers.map((m) => (
+            <MapMarker key={m.cityCode} cx={m.x} cy={m.y} status={status[m.cityCode] ?? "blank"} title={m.title} />
+          ))}
           <path d={prefBorderPath} className="map-pref-border" />
         </g>
       </svg>

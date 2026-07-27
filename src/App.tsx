@@ -25,26 +25,46 @@ function App() {
   const canonicalMap = useMemo(() => buildCanonicalMap(MUNICIPALITIES), []);
   const elapsedMs = useElapsedTimer(state.startedAt, state.finishedAt);
 
-  const total = useMemo(
-    () => Object.values(state.status).filter((s) => s !== "inactive" && s !== "excluded").length,
-    [state.status],
-  );
-  const solvedCount = useMemo(
-    () => Object.values(state.status).filter((s) => s === "solved").length,
-    [state.status],
-  );
-  const wrongCount = useMemo(
-    () => Object.values(state.status).filter((s) => s === "given-up").length,
-    [state.status],
-  );
-  const isRetryMode = useMemo(() => Object.values(state.status).some((s) => s === "inactive"), [state.status]);
-  const isPrefectureMode = useMemo(
-    () => Object.values(state.status).some((s) => s === "excluded"),
-    [state.status],
-  );
+  // Single pass over the 1747 statuses instead of five separate
+  // filter/some calls — this runs on every solved match, so every avoided
+  // full-array scan (and, for visibleMunicipalities, avoided re-allocation)
+  // helps keep typing responsive.
+  const { total, solvedCount, wrongCount, isRetryMode, isPrefectureMode } = useMemo(() => {
+    let total = 0;
+    let solvedCount = 0;
+    let wrongCount = 0;
+    let isRetryMode = false;
+    let isPrefectureMode = false;
+    for (const s of Object.values(state.status)) {
+      switch (s) {
+        case "solved":
+          solvedCount++;
+          total++;
+          break;
+        case "given-up":
+          wrongCount++;
+          total++;
+          break;
+        case "blank":
+          total++;
+          break;
+        case "inactive":
+          isRetryMode = true;
+          break;
+        case "excluded":
+          isPrefectureMode = true;
+          break;
+      }
+    }
+    return { total, solvedCount, wrongCount, isRetryMode, isPrefectureMode };
+  }, [state.status]);
+
+  // Reuse the constant MUNICIPALITIES reference when nothing is excluded
+  // (the common full/retry-mode case) so MunicipalityTable's own grouping
+  // memo can bail out entirely instead of re-grouping an equivalent list.
   const visibleMunicipalities = useMemo(
-    () => MUNICIPALITIES.filter((m) => state.status[m.cityCode] !== "excluded"),
-    [state.status],
+    () => (isPrefectureMode ? MUNICIPALITIES.filter((m) => state.status[m.cityCode] !== "excluded") : MUNICIPALITIES),
+    [state.status, isPrefectureMode],
   );
 
   const finished = state.finishedAt !== null;
