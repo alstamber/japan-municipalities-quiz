@@ -5,9 +5,7 @@ import { useElapsedTimer } from "./lib/useElapsedTimer";
 import { GuessInput } from "./components/GuessInput";
 import { JapanMap } from "./components/JapanMap";
 import { MunicipalityTable } from "./components/MunicipalityTable";
-import { StatsBar } from "./components/StatsBar";
 import { GiveUpButton } from "./components/GiveUpButton";
-import { ResultSummary } from "./components/ResultSummary";
 import type { EntryStatus } from "./types";
 import "./App.css";
 
@@ -71,7 +69,6 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>全市区町村ローマ字入力クイズ</h1>
-        <StatsBar elapsedMs={elapsedMs} solvedCount={solvedCount} total={TOTAL} />
         <div className="controls">
           <GuessInput
             canonicalMap={canonicalMap}
@@ -81,10 +78,15 @@ function App() {
           />
           <GiveUpButton disabled={finished} onGiveUp={() => dispatch({ type: "giveUp" })} />
         </div>
-        {finished && <ResultSummary elapsedMs={elapsedMs} solvedCount={solvedCount} total={TOTAL} />}
       </header>
       <div className="main-content">
-        <JapanMap status={state.status} />
+        <JapanMap
+          status={state.status}
+          elapsedMs={elapsedMs}
+          solvedCount={solvedCount}
+          total={TOTAL}
+          finished={finished}
+        />
         <MunicipalityTable municipalities={MUNICIPALITIES} status={state.status} />
       </div>
     </div>

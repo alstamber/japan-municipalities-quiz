@@ -8,10 +8,16 @@ import type { FeatureCollection, Geometry } from "geojson";
 import { MAP_TOPOLOGY, MAP_MARKER_FALLBACKS, LAKES } from "../data/map.generated";
 import { MUNICIPALITIES } from "../data/municipalities.generated";
 import { formatMunicipalityName } from "../lib/format";
+import { StatsBar } from "./StatsBar";
+import { ResultSummary } from "./ResultSummary";
 import type { EntryStatus } from "../types";
 
 interface Props {
   status: Record<string, EntryStatus>;
+  elapsedMs: number;
+  solvedCount: number;
+  total: number;
+  finished: boolean;
 }
 
 const WIDTH = 480;
@@ -28,7 +34,7 @@ interface MarkerDatum {
   y: number;
 }
 
-export function JapanMap({ status }: Props) {
+export function JapanMap({ status, elapsedMs, solvedCount, total, finished }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const zoomGroupRef = useRef<SVGGElement | null>(null);
 
@@ -93,6 +99,7 @@ export function JapanMap({ status }: Props) {
 
   return (
     <div className="japan-map">
+      <StatsBar elapsedMs={elapsedMs} solvedCount={solvedCount} total={total} />
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -123,6 +130,7 @@ export function JapanMap({ status }: Props) {
           <path d={prefBorderPath} className="map-pref-border" />
         </g>
       </svg>
+      {finished && <ResultSummary elapsedMs={elapsedMs} solvedCount={solvedCount} total={total} />}
       <p className="japan-map-credit">
         出典：国土数値情報（行政区域データ）（国土交通省）を加工して作成 / 湖沼形状の一部に © OpenStreetMap contributors のデータを使用
       </p>
