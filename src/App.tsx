@@ -102,7 +102,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>
-          全市区町村ローマ字入力クイズ
+          全市区町村クイズ
           {isRetryMode && isPrefectureMode && selectedPref && (
             <span className="mode-badge">{selectedPref.prefName}・復習モード</span>
           )}
