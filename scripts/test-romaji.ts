@@ -1,5 +1,5 @@
 import { MUNICIPALITIES } from "../src/data/municipalities.generated";
-import { kanaToBase, normalize, buildCanonicalMap } from "../src/lib/romaji";
+import { kanaToBase, normalize, buildCanonicalMap, buildKanaMap, foldKana } from "../src/lib/romaji";
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown) {
@@ -111,6 +111,41 @@ check("higashi (village, son reading, no suffix)", namesFor("higashi"), ["東村
 // the word-final "nn" doubling — "higashison" (single n) must NOT match.
 check("higashisonn (village, son reading, with suffix, doubled n)", namesFor("higashisonn"), ["東村"]);
 check("higashison (single trailing n, should NOT match)", namesFor("higashison"), []);
+
+// 9. Direct hiragana matching (buildKanaMap)
+const kMap = buildKanaMap(MUNICIPALITIES);
+console.log(`kanaMap has ${kMap.size} distinct keys for ${MUNICIPALITIES.length} entries`);
+
+function kanaNamesFor(input: string): string[] {
+  const codes = kMap.get(foldKana(input.trim())) ?? [];
+  return codes.map((c) => MUNICIPALITIES.find((m) => m.cityCode === c)?.cityName ?? c);
+}
+
+check("さっぽろし (full reading, with suffix)", kanaNamesFor("さっぽろし"), ["札幌市"]);
+check("さっぽろ (suffix-stripped)", kanaNamesFor("さっぽろ"), ["札幌市"]);
+check("さっぽ (prefix, should NOT match)", kanaNamesFor("さっぽ"), []);
+
+// Same duplicate-fill behavior as the romaji map, over the same collisions.
+check("ふちゅうし -> both 府中市", kanaNamesFor("ふちゅうし").sort(), ["府中市", "府中市"].sort());
+check("ふちゅう (no suffix) -> 府中市 x2 + 府中町", kanaNamesFor("ふちゅう").sort(), ["府中市", "府中市", "府中町"].sort());
+
+// づ/ず fold: official readings use づ, but ず is the phonetically natural
+// spelling an IME will produce — both must match.
+check("ぬまづし (official づ spelling)", kanaNamesFor("ぬまづし"), ["沼津市"]);
+check("ぬまずし (folded ず spelling)", kanaNamesFor("ぬまずし"), ["沼津市"]);
+check("きさらづし (official づ spelling)", kanaNamesFor("きさらづし"), ["木更津市"]);
+check("きさらずし (folded ず spelling)", kanaNamesFor("きさらずし"), ["木更津市"]);
+check("たからづかし (official づ spelling)", kanaNamesFor("たからづかし"), ["宝塚市"]);
+check("たからずかし (folded ず spelling)", kanaNamesFor("たからずかし"), ["宝塚市"]);
+
+// ぢ/じ fold, same reasoning.
+check("おぢやし (official ぢ spelling)", kanaNamesFor("おぢやし"), ["小千谷市"]);
+check("おじやし (folded じ spelling)", kanaNamesFor("おじやし"), ["小千谷市"]);
+
+// foldKana unit checks.
+check("foldKana leaves unrelated kana alone", foldKana("さっぽろ"), "さっぽろ");
+check("foldKana づ -> ず", foldKana("ぬまづ"), "ぬまず");
+check("foldKana ぢ -> じ", foldKana("おぢや"), "おじや");
 
 console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILURES`);
 process.exit(failures === 0 ? 0 : 1);

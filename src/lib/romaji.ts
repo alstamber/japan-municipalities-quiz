@@ -206,3 +206,38 @@ export function buildCanonicalMap(municipalities: Municipality[]): Map<string, s
 
   return map;
 }
+
+/** づ/ず and ぢ/じ are pronounced identically in modern Japanese and are
+ * already folded together romaji-side via MORA_TABLE (づ:"zu", ず:"zu",
+ * ぢ:"ji", じ:"ji"). Direct-hiragana matching needs the same folding — e.g.
+ * 沼津市 is officially ぬまづし but "zu" is the phonetically natural romaji
+ * a typist's IME will produce, yielding ず not づ. Applied symmetrically to
+ * both map keys and user input, same as normalize(). */
+export function foldKana(kana: string): string {
+  return kana.replace(/づ/g, "ず").replace(/ぢ/g, "じ");
+}
+
+/** hiragana reading -> matching city codes (still-unsolved filtering happens
+ * at the call site). No romaji-style variant generation is needed here — a
+ * hiragana mora has exactly one spelling (small っ/ゃ/ゅ/ょ are unambiguous
+ * once composed) — except づ/ず and ぢ/じ, folded via foldKana() above. */
+export function buildKanaMap(municipalities: Municipality[]): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  const add = (key: string, code: string) => {
+    if (!key) return;
+    const existing = map.get(key);
+    if (existing) {
+      if (!existing.includes(code)) existing.push(code);
+    } else {
+      map.set(key, [code]);
+    }
+  };
+
+  for (const m of municipalities) {
+    add(foldKana(m.cityKana), m.cityCode);
+    const stripped = stripSuffixKana(m.cityName, m.cityKana);
+    if (stripped) add(foldKana(stripped), m.cityCode);
+  }
+
+  return map;
+}

@@ -1,6 +1,6 @@
 import { useMemo, useReducer, useState } from "react";
 import { MUNICIPALITIES } from "./data/municipalities.generated";
-import { buildCanonicalMap } from "./lib/romaji";
+import { buildCanonicalMap, buildKanaMap } from "./lib/romaji";
 import { createSessionState, reducer } from "./lib/session";
 import { GuessInput } from "./components/GuessInput";
 import { JapanMap } from "./components/JapanMap";
@@ -22,6 +22,7 @@ function App() {
   const [state, dispatch] = useReducer(reducer, null, createSessionState);
   const [selectedPrefOrder, setSelectedPrefOrder] = useState<number | null>(null);
   const canonicalMap = useMemo(() => buildCanonicalMap(MUNICIPALITIES), []);
+  const kanaMap = useMemo(() => buildKanaMap(MUNICIPALITIES), []);
 
   // Single pass over the 1747 statuses instead of five separate
   // filter/some calls — this runs on every solved match, so every avoided
@@ -113,6 +114,7 @@ function App() {
         <div className="controls">
           <GuessInput
             canonicalMap={canonicalMap}
+            kanaMap={kanaMap}
             status={state.status}
             disabled={finished}
             onMatch={(codes) => dispatch({ type: "solve", codes })}
