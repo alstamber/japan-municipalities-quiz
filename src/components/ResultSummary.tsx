@@ -1,7 +1,8 @@
 import { formatElapsed } from "../lib/format";
 
 interface Props {
-  elapsedMs: number;
+  startedAt: number;
+  finishedAt: number;
   solvedCount: number;
   total: number;
   wrongCount: number;
@@ -9,7 +10,15 @@ interface Props {
   onStartFull: () => void;
 }
 
-export function ResultSummary({ elapsedMs, solvedCount, total, wrongCount, onRetryWrong, onStartFull }: Props) {
+export function ResultSummary({
+  startedAt,
+  finishedAt,
+  solvedCount,
+  total,
+  wrongCount,
+  onRetryWrong,
+  onStartFull,
+}: Props) {
   const allSolved = solvedCount === total;
   return (
     <div className="result-summary">
@@ -17,7 +26,7 @@ export function ResultSummary({ elapsedMs, solvedCount, total, wrongCount, onRet
       <p>
         正解数: {solvedCount} / {total}
       </p>
-      <p>経過時間: {formatElapsed(elapsedMs)}</p>
+      <p>経過時間: {formatElapsed(finishedAt - startedAt)}</p>
       <div className="result-actions">
         {wrongCount > 0 && (
           <button type="button" className="result-action-button" onClick={onRetryWrong}>

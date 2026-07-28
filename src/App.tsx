@@ -1,7 +1,6 @@
 import { useMemo, useReducer, useState } from "react";
 import { MUNICIPALITIES } from "./data/municipalities.generated";
 import { buildCanonicalMap } from "./lib/romaji";
-import { useElapsedTimer } from "./lib/useElapsedTimer";
 import { createSessionState, reducer } from "./lib/session";
 import { GuessInput } from "./components/GuessInput";
 import { JapanMap } from "./components/JapanMap";
@@ -23,7 +22,6 @@ function App() {
   const [state, dispatch] = useReducer(reducer, null, createSessionState);
   const [selectedPrefOrder, setSelectedPrefOrder] = useState<number | null>(null);
   const canonicalMap = useMemo(() => buildCanonicalMap(MUNICIPALITIES), []);
-  const elapsedMs = useElapsedTimer(state.startedAt, state.finishedAt);
 
   // Single pass over the 1747 statuses instead of five separate
   // filter/some calls — this runs on every solved match, so every avoided
@@ -137,10 +135,10 @@ function App() {
       <div className="main-content">
         <JapanMap
           status={state.status}
-          elapsedMs={elapsedMs}
+          startedAt={state.startedAt}
+          finishedAt={state.finishedAt}
           solvedCount={solvedCount}
           total={total}
-          finished={finished}
           wrongCount={wrongCount}
           onRetryWrong={handleRetryWrong}
           onStartFull={handleStartFull}

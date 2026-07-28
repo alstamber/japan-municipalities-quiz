@@ -17,10 +17,10 @@ import type { EntryStatus } from "../types";
 
 interface Props {
   status: Record<string, EntryStatus>;
-  elapsedMs: number;
+  startedAt: number;
+  finishedAt: number | null;
   solvedCount: number;
   total: number;
-  finished: boolean;
   wrongCount: number;
   onRetryWrong: () => void;
   onStartFull: () => void;
@@ -64,10 +64,10 @@ function mergeBounds(a: Bounds | undefined, b: Bounds): Bounds {
 
 export function JapanMap({
   status,
-  elapsedMs,
+  startedAt,
+  finishedAt,
   solvedCount,
   total,
-  finished,
   wrongCount,
   onRetryWrong,
   onStartFull,
@@ -187,7 +187,7 @@ export function JapanMap({
 
   return (
     <div className="japan-map">
-      <StatsBar elapsedMs={elapsedMs} solvedCount={solvedCount} total={total} />
+      <StatsBar startedAt={startedAt} finishedAt={finishedAt} solvedCount={solvedCount} total={total} />
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -208,9 +208,10 @@ export function JapanMap({
           <path d={prefBorderPath} className="map-pref-border" />
         </g>
       </svg>
-      {finished && (
+      {finishedAt !== null && (
         <ResultSummary
-          elapsedMs={elapsedMs}
+          startedAt={startedAt}
+          finishedAt={finishedAt}
           solvedCount={solvedCount}
           total={total}
           wrongCount={wrongCount}
