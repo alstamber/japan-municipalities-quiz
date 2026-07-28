@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useRef, type ChangeEvent } from "react";
 import { normalize } from "../lib/romaji";
 import type { EntryStatus } from "../types";
 
@@ -9,14 +9,17 @@ interface Props {
   onMatch: (codes: string[]) => void;
 }
 
+// Deliberately uncontrolled: an onChange-driven `value` state would put every
+// keystroke (including every Backspace while deleting a wrong guess) through
+// a React render+commit, even though nothing visible needs React to run for
+// non-matching input. Reading e.target.value and clearing via the DOM ref
+// keeps typing exactly as cheap as a plain <input> — React only gets
+// involved for the one keystroke that actually completes a match.
 export function GuessInput({ canonicalMap, status, disabled, onMatch }: Props) {
-  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    setValue(raw);
-
-    const key = normalize(raw);
+    const key = normalize(e.target.value);
     if (!key) return;
 
     const codes = canonicalMap.get(key);
@@ -25,15 +28,16 @@ export function GuessInput({ canonicalMap, status, disabled, onMatch }: Props) {
     const unsolved = codes.filter((code) => status[code] === "blank");
     if (unsolved.length > 0) {
       onMatch(unsolved);
-      setValue("");
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
   return (
     <input
+      ref={inputRef}
       type="text"
       className="guess-input"
-      value={value}
+      defaultValue=""
       onChange={handleChange}
       disabled={disabled}
       placeholder="ローマ字で市区町村名を入力"
