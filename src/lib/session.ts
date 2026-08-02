@@ -5,12 +5,16 @@ export interface State {
   status: Record<string, EntryStatus>;
   startedAt: number;
   finishedAt: number | null;
+  pausedAt: number | null;
+  pausedDurationMs: number;
 }
 
 export type Action =
   | { type: "solve"; codes: string[] }
   | { type: "giveUp" }
-  | { type: "startSession"; targetCodes: string[] | null; outOfScopeStatus?: "inactive" | "excluded" };
+  | { type: "startSession"; targetCodes: string[] | null; outOfScopeStatus?: "inactive" | "excluded" }
+  | { type: "pause" }
+  | { type: "resume" };
 
 /** targetCodes === null means the full 1747-municipality session; otherwise
  * only those codes start "blank" and everything else gets outOfScopeStatus:
@@ -39,12 +43,13 @@ export function createSessionState(
       status[m.cityCode] = previousStatus?.[m.cityCode] === "excluded" ? "excluded" : outOfScopeStatus;
     }
   }
-  return { status, startedAt: Date.now(), finishedAt: null };
+  return { status, startedAt: Date.now(), finishedAt: null, pausedAt: null, pausedDurationMs: 0 };
 }
 
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "solve": {
+      if (state.pausedAt !== null) return state;
       const status = { ...state.status };
       let changed = false;
       for (const code of action.codes) {
@@ -62,7 +67,7 @@ export function reducer(state: State, action: Action): State {
       return { ...state, status, finishedAt };
     }
     case "giveUp": {
-      if (state.finishedAt !== null) return state;
+      if (state.finishedAt !== null || state.pausedAt !== null) return state;
       const status = { ...state.status };
       for (const code in status) {
         if (status[code] === "blank") status[code] = "given-up";
@@ -71,5 +76,13 @@ export function reducer(state: State, action: Action): State {
     }
     case "startSession":
       return createSessionState(action.targetCodes, action.outOfScopeStatus, state.status);
+    case "pause": {
+      if (state.finishedAt !== null || state.pausedAt !== null) return state;
+      return { ...state, pausedAt: Date.now() };
+    }
+    case "resume": {
+      if (state.pausedAt === null) return state;
+      return { ...state, pausedAt: null, pausedDurationMs: state.pausedDurationMs + (Date.now() - state.pausedAt) };
+    }
   }
 }

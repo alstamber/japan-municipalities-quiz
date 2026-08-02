@@ -4,6 +4,8 @@ import { useElapsedTimer } from "../lib/useElapsedTimer";
 interface Props {
   startedAt: number;
   finishedAt: number | null;
+  pausedAt: number | null;
+  pausedDurationMs: number;
   solvedCount: number;
   total: number;
 }
@@ -14,8 +16,8 @@ interface Props {
  * therefore the whole ~1900-shape map and ~1747-cell table) four times a
  * second regardless of whether the user was doing anything, competing with
  * input handling for the main thread. */
-export function StatsBar({ startedAt, finishedAt, solvedCount, total }: Props) {
-  const elapsedMs = useElapsedTimer(startedAt, finishedAt);
+export function StatsBar({ startedAt, finishedAt, pausedAt, pausedDurationMs, solvedCount, total }: Props) {
+  const elapsedMs = useElapsedTimer(startedAt, finishedAt, pausedAt, pausedDurationMs);
   return (
     <div className="stats-bar">
       <span className="stats-time">{formatElapsed(elapsedMs)}</span>

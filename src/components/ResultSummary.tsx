@@ -3,6 +3,7 @@ import { formatElapsed } from "../lib/format";
 interface Props {
   startedAt: number;
   finishedAt: number;
+  pausedDurationMs: number;
   solvedCount: number;
   total: number;
   wrongCount: number;
@@ -13,6 +14,7 @@ interface Props {
 export function ResultSummary({
   startedAt,
   finishedAt,
+  pausedDurationMs,
   solvedCount,
   total,
   wrongCount,
@@ -26,7 +28,7 @@ export function ResultSummary({
       <p>
         正解数: {solvedCount} / {total}
       </p>
-      <p>経過時間: {formatElapsed(finishedAt - startedAt)}</p>
+      <p>経過時間: {formatElapsed(finishedAt - startedAt - pausedDurationMs)}</p>
       <div className="result-actions">
         {wrongCount > 0 && (
           <button type="button" className="result-action-button" onClick={onRetryWrong}>

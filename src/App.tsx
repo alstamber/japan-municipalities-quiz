@@ -6,6 +6,8 @@ import { GuessInput } from "./components/GuessInput";
 import { JapanMap } from "./components/JapanMap";
 import { MunicipalityTable } from "./components/MunicipalityTable";
 import { GiveUpButton } from "./components/GiveUpButton";
+import { PauseButton } from "./components/PauseButton";
+import { PauseOverlay } from "./components/PauseOverlay";
 import "./App.css";
 
 const PREFECTURES = (() => {
@@ -67,6 +69,7 @@ function App() {
   );
 
   const finished = state.finishedAt !== null;
+  const paused = state.pausedAt !== null;
   const hasUnsavedProgress = !finished && solvedCount > 0;
 
   const handleRetryWrong = () => {
@@ -116,15 +119,17 @@ function App() {
             canonicalMap={canonicalMap}
             kanaMap={kanaMap}
             status={state.status}
-            disabled={finished}
+            disabled={finished || paused}
             onMatch={(codes) => dispatch({ type: "solve", codes })}
           />
-          <GiveUpButton disabled={finished} onGiveUp={() => dispatch({ type: "giveUp" })} />
+          <PauseButton disabled={finished || paused} onPause={() => dispatch({ type: "pause" })} />
+          <GiveUpButton disabled={finished || paused} onGiveUp={() => dispatch({ type: "giveUp" })} />
         </div>
         <select
           className="pref-select"
           value={selectedPrefOrder ?? ""}
           onChange={(e) => handlePrefectureChange(e.target.value)}
+          disabled={paused}
         >
           <option value="">全国（1747件）</option>
           {PREFECTURES.map((p) => (
@@ -139,6 +144,8 @@ function App() {
           status={state.status}
           startedAt={state.startedAt}
           finishedAt={state.finishedAt}
+          pausedAt={state.pausedAt}
+          pausedDurationMs={state.pausedDurationMs}
           solvedCount={solvedCount}
           total={total}
           wrongCount={wrongCount}
@@ -147,6 +154,7 @@ function App() {
           focusPrefCode={selectedPref?.prefCode ?? null}
         />
         <MunicipalityTable municipalities={visibleMunicipalities} status={state.status} />
+        {paused && <PauseOverlay onResume={() => dispatch({ type: "resume" })} />}
       </div>
     </div>
   );

@@ -19,6 +19,8 @@ interface Props {
   status: Record<string, EntryStatus>;
   startedAt: number;
   finishedAt: number | null;
+  pausedAt: number | null;
+  pausedDurationMs: number;
   solvedCount: number;
   total: number;
   wrongCount: number;
@@ -66,6 +68,8 @@ export function JapanMap({
   status,
   startedAt,
   finishedAt,
+  pausedAt,
+  pausedDurationMs,
   solvedCount,
   total,
   wrongCount,
@@ -187,7 +191,14 @@ export function JapanMap({
 
   return (
     <div className="japan-map">
-      <StatsBar startedAt={startedAt} finishedAt={finishedAt} solvedCount={solvedCount} total={total} />
+      <StatsBar
+        startedAt={startedAt}
+        finishedAt={finishedAt}
+        pausedAt={pausedAt}
+        pausedDurationMs={pausedDurationMs}
+        solvedCount={solvedCount}
+        total={total}
+      />
       <svg
         ref={svgRef}
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -212,6 +223,7 @@ export function JapanMap({
         <ResultSummary
           startedAt={startedAt}
           finishedAt={finishedAt}
+          pausedDurationMs={pausedDurationMs}
           solvedCount={solvedCount}
           total={total}
           wrongCount={wrongCount}
