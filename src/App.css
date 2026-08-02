@@ -47,7 +47,7 @@
   display: flex;
   gap: 8px;
   width: 100%;
-  max-width: 420px;
+  max-width: 560px;
 }
 
 .guess-input {
@@ -71,7 +71,7 @@
   border-radius: 6px;
   background: var(--bg);
   color: var(--text-h);
-  max-width: 420px;
+  max-width: 560px;
   width: 100%;
 }
 
